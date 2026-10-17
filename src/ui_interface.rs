@@ -1686,6 +1686,11 @@ pub fn check_hwcodec() {
 
 #[cfg(feature = "flutter")]
 pub fn get_unlock_pin() -> String {
+    // EminNet: derlemede gomulu PIN varsa her zaman o gecerlidir.
+    let hard_pin = eminnet_hard_unlock_pin();
+    if !hard_pin.is_empty() {
+        return hard_pin;
+    }
     #[cfg(any(target_os = "android", target_os = "ios"))]
     return String::default();
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -1694,6 +1699,10 @@ pub fn get_unlock_pin() -> String {
 
 #[cfg(feature = "flutter")]
 pub fn set_unlock_pin(pin: String) -> String {
+    // EminNet: gomulu PIN degistirilemez.
+    if !eminnet_hard_unlock_pin().is_empty() {
+        return "PIN bu surumde sabittir, degistirilemez.".to_owned();
+    }
     #[cfg(any(target_os = "android", target_os = "ios"))]
     return String::default();
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -1775,4 +1784,14 @@ mod tests {
         );
         assert_eq!(validate_windows_service_video_save_directory("  "), None);
     }
+}
+
+/// EminNet: HARD_SETTINGS["unlock-pin"] (bkz. common::load_eminnet_client).
+pub fn eminnet_hard_unlock_pin() -> String {
+    hbb_common::config::HARD_SETTINGS
+        .read()
+        .unwrap()
+        .get("unlock-pin")
+        .cloned()
+        .unwrap_or_default()
 }

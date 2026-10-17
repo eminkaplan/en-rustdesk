@@ -2357,7 +2357,37 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
     ThrottledInterval::new(i)
 }
 
+/// EminNet ozel istemci: derleme zamaninda (CI env) gomulen sabit ayarlar.
+/// EMINNET_HOST bos ise hic bir sey yapilmaz (stok RustDesk davranisi).
+///  - custom-rendezvous-server / relay-server / key: OVERWRITE_SETTINGS -> arayuzde kilitli, degistirilemez
+///  - conn-type (incoming|outgoing): HARD_SETTINGS -> yalniz destek al / yalniz destek ver
+///  - unlock-pin: HARD_SETTINGS -> ayarlar kilidi sabit PIN ile acilir (bkz. ui_interface::get_unlock_pin)
+pub fn load_eminnet_client() {
+    let host = option_env!("EMINNET_HOST").unwrap_or("");
+    if host.is_empty() {
+        return;
+    }
+    let key = option_env!("EMINNET_KEY").unwrap_or("");
+    let conn_type = option_env!("EMINNET_CONN_TYPE").unwrap_or("");
+    let pin = option_env!("EMINNET_UNLOCK_PIN").unwrap_or("");
+    {
+        let mut ow = config::OVERWRITE_SETTINGS.write().unwrap();
+        ow.insert("custom-rendezvous-server".to_owned(), host.to_owned());
+        ow.insert("relay-server".to_owned(), host.to_owned());
+        ow.insert("key".to_owned(), key.to_owned());
+    }
+    let mut hard = config::HARD_SETTINGS.write().unwrap();
+    if conn_type == "incoming" || conn_type == "outgoing" {
+        hard.insert("conn-type".to_owned(), conn_type.to_owned());
+    }
+    if !pin.is_empty() {
+        hard.insert("unlock-pin".to_owned(), pin.to_owned());
+    }
+    log::info!("EminNet client: host={host} conn_type={conn_type} pin_set={}", !pin.is_empty());
+}
+
 pub fn load_custom_client() {
+    load_eminnet_client();
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
