@@ -1,4 +1,4 @@
-# EminNet ozel Windows x64 istemcileri (destek-al = yalniz gelen, destek-ver = yalniz giden).
+# EminNet ozel Windows x64 istemcileri (destek-al = yalniz gelen, destek-ver = cift yonlu).
 # flutter-build.yml'deki build-for-windows-flutter isinin x64 adimlarinin kirpilmis kopyasi.
 # Sunucu/anahtar/PIN derlemeye EMINNET_* ortam degiskenleriyle gomulur (src/common.rs load_eminnet_client).
 name: EminNet Windows build
@@ -49,7 +49,7 @@ jobs:
       matrix:
         variant:
           - { name: destek-al,  conn: incoming }
-          - { name: destek-ver, conn: outgoing }
+          - { name: destek-ver, conn: ""       }  # bos = cift yonlu (hem alir hem baglanir)
     env:
       EMINNET_CONN_TYPE: ${{ matrix.variant.conn }}
     steps:
@@ -218,7 +218,7 @@ jobs:
       matrix:
         variant:
           - { name: destek-al,  conn: incoming }
-          - { name: destek-ver, conn: outgoing }
+          - { name: destek-ver, conn: ""       }  # bos = cift yonlu (hem alir hem baglanir)
     steps:
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
